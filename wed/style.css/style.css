@@ -1,0 +1,26 @@
+body {
+    text-align: center;
+    font-family: sans-serif;
+    margin-top: 100px;
+    background: #fff0f5;
+}
+
+input {
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid pink;
+}
+
+button {
+    padding: 10px 20px;
+    margin-left: 10px;
+    border: none;
+    border-radius: 20px;
+    background: hotpink;
+    color: white;
+    cursor: pointer;
+}
+
+button:hover {
+    transform: scale(1.1);
+}
