@@ -1,32 +1,41 @@
 <!DOCTYPE html>
-<html long="ja"
+<thml long="ja">
 <head>
-    <meta charset="UTF-8">
-    <title>自己紹介</title>
-    <link rel="stylesheet" href="style.css"
+    <mate charset="UTF-8">
+    <title>マイ道具箱</title>
+    <style>
+        body{ font-family: sans-serif; padding: 20px; }
+        li { cursor: pointer; padding: 5px; }
+        li:hover {background: #f0f0f0; }
+    </style>
 </head>
-
 <body>
 
+    <h1>自分専用ToDo</h1>
 
-    <div class="heart">♡</div>
-    <div class="heart">♡</div>
-    <div class="heart">♡</div>
+    <input type="text" id="todo-input" placeholder="なにする？">
+    <button onclick="addTodo()">追加</button>
 
-    <h1>もえの自己紹介</h1>
+    <ul id="todo-list"></ul>
 
-    <P>こんにちは！私の好きなものを紹介します</P>
+    <script>
+        function addTodo() {
+            const input = document.getElementById('todo-input');
+            const list = document.getElementById('todo-list');
 
-    <ul>
-        <li>食べる</li>
-        <li>音楽</li>
-        <li>可愛いもの</li>
-    </ul>
+            if (input.value　!=="") {
+                const li = document.createElement('li');
+                li.innerText = input.value;
 
-    <button onclick="alert('押してくれてありがとう♡')">
-        押してね♡
-    </button>
-    
-    <script src="script.js"></script>
+                li.onclick = function() {
+                    this.remove();
+                };
+
+                list.appendChild(li);
+                input.value ="";
+            }
+        }
+    </script>
+
 </body>
-</html>
+</thml>
