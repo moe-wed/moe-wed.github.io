@@ -2,37 +2,28 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>万能マンスリースケジュール</title>
+    <title>保存できる！万能カレンダー</title>
     <style>
         :root { --primary: #ffcc00; --bg: #f0f2f5; --text: #2c3e50; }
         body { font-family: sans-serif; padding: 20px; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; }
-        
-        /* 入力エリア */
         .input-group { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; display: flex; gap: 10px; width: 100%; max-width: 600px; }
         input { padding: 8px; border: 1px solid #ddd; border-radius: 6px; }
         button { background: var(--primary); border: none; border-radius: 6px; padding: 8px 15px; cursor: pointer; font-weight: bold; }
-
-        /* カレンダー本体 */
         .calendar-container { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 800px; }
-        
-        /* 月を切り替えるヘッダー */
         .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .nav-btn { background: #eee; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer; font-size: 18px; }
-        .nav-btn:hover { background: #ddd; }
         #month-display { font-size: 24px; font-weight: bold; }
-
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
         .day-name { text-align: center; font-weight: bold; padding: 10px; background: #f8f9fa; border-radius: 4px; font-size: 14px; }
-        .day { min-height: 90px; border: 1px solid #eee; padding: 5px; background: #fff; border-radius: 4px; }
+        .day { min-height: 90px; border: 1px solid #eee; padding: 5px; background: #fff; border-radius: 4px; overflow-y: auto; }
         .day.today { border: 2px solid var(--primary); background: #fffdf0; }
         .date-num { font-size: 12px; color: #888; margin-bottom: 5px; }
-        
-        .event { font-size: 11px; background: var(--primary); padding: 2px 5px; border-radius: 3px; margin-bottom: 2px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .event { font-size: 11px; background: var(--primary); padding: 2px 5px; border-radius: 3px; margin-bottom: 2px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     </style>
 </head>
 <body>
 
-    <h1>スケジュール帳</h1>
+    <h1>保存機能付きカレンダー</h1>
 
     <div class="input-group">
         <input type="date" id="todo-date">
@@ -50,8 +41,9 @@
     </div>
 
     <script>
-        let currentDisplayDate = new Date(); // 今表示している月を管理
-        const allEvents = {}; // 予定を保存する場所
+        let currentDisplayDate = new Date();
+        // ★ 読み込み時に保存されたデータを取得（なければ空っぽ）
+        let allEvents = JSON.parse(localStorage.getItem('myCalendarEvents')) || {};
 
         function init() {
             document.getElementById('todo-date').value = new Date().toISOString().split('T')[0];
@@ -67,7 +59,6 @@
             const month = currentDisplayDate.getMonth();
             display.innerText = `${year}年 ${month + 1}月`;
 
-            // 曜日ラベル
             ['日','月','火','水','木','金','土'].forEach(d => {
                 const div = document.createElement('div');
                 div.className = 'day-name';
@@ -78,25 +69,26 @@
             const firstDay = new Date(year, month, 1).getDay();
             const lastDate = new Date(year, month + 1, 0).getDate();
 
-            // 前月の空白
             for (let i = 0; i < firstDay; i++) grid.appendChild(document.createElement('div'));
 
-            // 日付マス作成
             for (let d = 1; d <= lastDate; d++) {
                 const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
                 const dayDiv = document.createElement('div');
                 dayDiv.className = 'day';
                 if (dateStr === new Date().toISOString().split('T')[0]) dayDiv.classList.add('today');
-
                 dayDiv.innerHTML = `<div class="date-num">${d}</div>`;
                 
-                // その日の予定を表示
                 if (allEvents[dateStr]) {
                     allEvents[dateStr].forEach((text, idx) => {
                         const ev = document.createElement('div');
                         ev.className = 'event';
                         ev.innerText = text;
-                        ev.onclick = () => { if(confirm("消去しますか？")){ allEvents[dateStr].splice(idx,1); render(); } };
+                        ev.onclick = () => { 
+                            if(confirm("消去しますか？")){ 
+                                allEvents[dateStr].splice(idx,1); 
+                                saveAndRender(); // 保存して再描画
+                            } 
+                        };
                         dayDiv.appendChild(ev);
                     });
                 }
@@ -116,6 +108,12 @@
             if (!allEvents[date]) allEvents[date] = [];
             allEvents[date].push(text);
             document.getElementById('todo-input').value = '';
+            saveAndRender(); // 保存して再描画
+        }
+
+        // ★ データをブラウザに保存する関数
+        function saveAndRender() {
+            localStorage.setItem('myCalendarEvents', JSON.stringify(allEvents));
             render();
         }
 
