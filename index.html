@@ -2,110 +2,37 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>マイ道具箱 - マンスリーカレンダー</title>
+    <title>万能マンスリースケジュール</title>
     <style>
-        :root {
-            --primary-color: #ffcc00;
-            --bg-color: #f0f2f5;
-            --text-color: #2c3e50;
-        }
-
-        body { 
-            font-family: 'Helvetica Neue', Arial, sans-serif; 
-            padding: 20px; 
-            background-color: var(--bg-color); 
-            color: var(--text-color);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        h1 { margin-bottom: 20px; }
-
+        :root { --primary: #ffcc00; --bg: #f0f2f5; --text: #2c3e50; }
+        body { font-family: sans-serif; padding: 20px; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; }
+        
         /* 入力エリア */
-        .input-group { 
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
-            display: flex;
-            gap: 10px;
-            width: 100%;
-            max-width: 600px;
-        }
+        .input-group { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; display: flex; gap: 10px; width: 100%; max-width: 600px; }
+        input { padding: 8px; border: 1px solid #ddd; border-radius: 6px; }
+        button { background: var(--primary); border: none; border-radius: 6px; padding: 8px 15px; cursor: pointer; font-weight: bold; }
 
-        input { padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
-        button { 
-            background-color: var(--primary-color); 
-            border: none; border-radius: 8px; 
-            padding: 10px 20px; cursor: pointer; font-weight: bold; 
-        }
+        /* カレンダー本体 */
+        .calendar-container { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 800px; }
+        
+        /* 月を切り替えるヘッダー */
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .nav-btn { background: #eee; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer; font-size: 18px; }
+        .nav-btn:hover { background: #ddd; }
+        #month-display { font-size: 24px; font-weight: bold; }
 
-        /* カレンダーの構造 */
-        .calendar-container {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 800px;
-        }
-
-        .calendar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            font-size: 20px;
-            font-weight: bold;
-        }
-
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 5px;
-        }
-
-        .day-name {
-            text-align: center;
-            font-weight: bold;
-            padding: 10px;
-            background: #eee;
-            border-radius: 4px;
-        }
-
-        .day {
-            min-height: 80px;
-            border: 1px solid #eee;
-            padding: 5px;
-            background: #fff;
-            border-radius: 4px;
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-
-        .day.today { border: 2px solid var(--primary-color); background: #fffdf0; }
-
-        .date-num { font-size: 12px; color: #999; margin-bottom: 5px; }
-
-        /* 予定のラベル */
-        .event {
-            font-size: 11px;
-            background: var(--primary-color);
-            padding: 2px 5px;
-            border-radius: 3px;
-            cursor: pointer;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+        .day-name { text-align: center; font-weight: bold; padding: 10px; background: #f8f9fa; border-radius: 4px; font-size: 14px; }
+        .day { min-height: 90px; border: 1px solid #eee; padding: 5px; background: #fff; border-radius: 4px; }
+        .day.today { border: 2px solid var(--primary); background: #fffdf0; }
+        .date-num { font-size: 12px; color: #888; margin-bottom: 5px; }
+        
+        .event { font-size: 11px; background: var(--primary); padding: 2px 5px; border-radius: 3px; margin-bottom: 2px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     </style>
 </head>
 <body>
 
-    <h1>マンスリースケジュール</h1>
+    <h1>スケジュール帳</h1>
 
     <div class="input-group">
         <input type="date" id="todo-date">
@@ -114,84 +41,85 @@
     </div>
 
     <div class="calendar-container">
-        <div class="calendar-header" id="month-display"></div>
-        <div class="calendar-grid" id="calendar-grid">
-            </div>
+        <div class="calendar-header">
+            <button class="nav-btn" onclick="changeMonth(-1)">❮</button>
+            <div id="month-display"></div>
+            <button class="nav-btn" onclick="changeMonth(1)">❯</button>
+        </div>
+        <div class="calendar-grid" id="calendar-grid"></div>
     </div>
 
     <script>
-        const events = {}; // 予定を保存するオブジェクト
+        let currentDisplayDate = new Date(); // 今表示している月を管理
+        const allEvents = {}; // 予定を保存する場所
 
-        function initCalendar() {
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = now.getMonth();
-            
-            document.getElementById('month-display').innerText = `${year}年 ${month + 1}月`;
-            document.getElementById('todo-date').value = now.toISOString().split('T')[0];
-
-            renderCalendar(year, month);
+        function init() {
+            document.getElementById('todo-date').value = new Date().toISOString().split('T')[0];
+            render();
         }
 
-        function renderCalendar(year, month) {
+        function render() {
             const grid = document.getElementById('calendar-grid');
+            const display = document.getElementById('month-display');
             grid.innerHTML = '';
 
-            const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
-            dayNames.forEach(name => {
+            const year = currentDisplayDate.getFullYear();
+            const month = currentDisplayDate.getMonth();
+            display.innerText = `${year}年 ${month + 1}月`;
+
+            // 曜日ラベル
+            ['日','月','火','水','木','金','土'].forEach(d => {
                 const div = document.createElement('div');
                 div.className = 'day-name';
-                div.innerText = name;
+                div.innerText = d;
                 grid.appendChild(div);
             });
 
             const firstDay = new Date(year, month, 1).getDay();
             const lastDate = new Date(year, month + 1, 0).getDate();
 
-            // 空白のマス
-            for (let i = 0; i < firstDay; i++) {
-                grid.appendChild(document.createElement('div'));
-            }
+            // 前月の空白
+            for (let i = 0; i < firstDay; i++) grid.appendChild(document.createElement('div'));
 
-            // 日付のマス
-            for (let date = 1; date <= lastDate; date++) {
+            // 日付マス作成
+            for (let d = 1; d <= lastDate; d++) {
+                const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
                 const dayDiv = document.createElement('div');
                 dayDiv.className = 'day';
-                const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
+                if (dateStr === new Date().toISOString().split('T')[0]) dayDiv.classList.add('today');
+
+                dayDiv.innerHTML = `<div class="date-num">${d}</div>`;
                 
-                dayDiv.innerHTML = `<div class="date-num">${date}</div>`;
-                dayDiv.id = `date-${dateString}`;
-
-                if (dateString === new Date().toISOString().split('T')[0]) {
-                    dayDiv.classList.add('today');
+                // その日の予定を表示
+                if (allEvents[dateStr]) {
+                    allEvents[dateStr].forEach((text, idx) => {
+                        const ev = document.createElement('div');
+                        ev.className = 'event';
+                        ev.innerText = text;
+                        ev.onclick = () => { if(confirm("消去しますか？")){ allEvents[dateStr].splice(idx,1); render(); } };
+                        dayDiv.appendChild(ev);
+                    });
                 }
-
                 grid.appendChild(dayDiv);
             }
+        }
+
+        function changeMonth(diff) {
+            currentDisplayDate.setMonth(currentDisplayDate.getMonth() + diff);
+            render();
         }
 
         function addEvent() {
             const date = document.getElementById('todo-date').value;
             const text = document.getElementById('todo-input').value;
             if (!date || !text) return;
-
-            const dayDiv = document.getElementById(`date-${date}`);
-            if (dayDiv) {
-                const eventDiv = document.createElement('div');
-                eventDiv.className = 'event';
-                eventDiv.innerText = text;
-                eventDiv.onclick = (e) => {
-                    e.stopPropagation();
-                    if(confirm("削除しますか？")) eventDiv.remove();
-                };
-                dayDiv.appendChild(eventDiv);
-                document.getElementById('todo-input').value = '';
-            } else {
-                alert("今月のカレンダーの範囲外です！");
-            }
+            if (!allEvents[date]) allEvents[date] = [];
+            allEvents[date].push(text);
+            document.getElementById('todo-input').value = '';
+            render();
         }
 
-        initCalendar();
+        init();
     </script>
 </body>
 </html>
